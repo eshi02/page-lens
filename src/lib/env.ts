@@ -2,13 +2,16 @@ import { z } from 'zod'
 
 /**
  * Single source of truth for environment configuration.
- * Validated at module load — if any required variable is missing the app
- * fails fast on startup rather than mid-request.
+ *
+ * Two exports:
+ *   - `env`        — the full server-side env. Validated at module load.
+ *                    Importing this from a client component will throw.
+ *   - `publicEnv`  — only NEXT_PUBLIC_* vars. Safe to import anywhere.
  */
 const serverSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
 
-  DATABASE_URL: z.string().url(),
+  DATABASE_URL: z.string().min(1),
 
   SUPABASE_URL: z.string().url(),
   SUPABASE_ANON_KEY: z.string().min(1),
@@ -28,24 +31,43 @@ const serverSchema = z.object({
   APP_URL: z.string().url().default('http://localhost:3000'),
 })
 
-const clientSchema = z.object({
+const publicSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
   NEXT_PUBLIC_APP_URL: z.string().url().default('http://localhost:3000'),
 })
 
-function parseEnv() {
-  const isServer = typeof window === 'undefined'
-  if (isServer) {
-    return serverSchema.parse(process.env)
+const isServer = typeof window === 'undefined'
+
+/**
+ * Treat empty-string env vars as unset. Otherwise Zod's `.url().optional()`
+ * still chokes on `""` because the value is technically present.
+ */
+function blanksToUndefined<T extends Record<string, unknown>>(input: T): T {
+  const out: Record<string, unknown> = {}
+  for (const [k, v] of Object.entries(input)) {
+    out[k] = v === '' ? undefined : v
   }
-  // On the client, only NEXT_PUBLIC_* vars are exposed at runtime.
-  return clientSchema.parse({
-    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
-  })
+  return out as T
 }
 
-export const env = parseEnv()
+/**
+ * Server-side env. Throws at import time on the client.
+ */
+export const env = (() => {
+  if (!isServer) {
+    throw new Error(
+      "src/lib/env.ts: server `env` was imported from the browser. Use `publicEnv` from a client component instead.",
+    )
+  }
+  return serverSchema.parse(blanksToUndefined(process.env))
+})()
+
+export const publicEnv = publicSchema.parse({
+  NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+})
+
 export type Env = typeof env
+export type PublicEnv = typeof publicEnv
