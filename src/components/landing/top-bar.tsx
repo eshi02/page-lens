@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -56,21 +57,27 @@ export function TopBar({ user }: { user: TopBarUser }) {
           <span className="hidden text-sm sm:inline">{display}</span>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="min-w-56">
-          <DropdownMenuLabel className="flex flex-col">
-            <span className="font-medium">{display}</span>
-            <span className="text-xs text-muted-foreground">{user.email}</span>
-          </DropdownMenuLabel>
+          <DropdownMenuGroup>
+            <DropdownMenuLabel className="flex flex-col">
+              <span className="font-medium">{display}</span>
+              <span className="text-xs text-muted-foreground">{user.email}</span>
+            </DropdownMenuLabel>
+          </DropdownMenuGroup>
           <DropdownMenuSeparator />
-          <DropdownMenuItem render={<Link href="/settings" />}>Settings</DropdownMenuItem>
-          <DropdownMenuItem render={<Link href="/billing" />}>Billing</DropdownMenuItem>
+          <DropdownMenuGroup>
+            <DropdownMenuItem render={<Link href="/settings" />}>Settings</DropdownMenuItem>
+            <DropdownMenuItem render={<Link href="/billing" />}>Billing</DropdownMenuItem>
+          </DropdownMenuGroup>
           <DropdownMenuSeparator />
-          <DropdownMenuItem className="p-0">
-            <form action={signOut} className="contents">
-              <button type="submit" className="w-full px-2 py-1.5 text-left">
-                Sign out
-              </button>
-            </form>
-          </DropdownMenuItem>
+          <DropdownMenuGroup>
+            <DropdownMenuItem className="p-0">
+              <form action={signOut} className="contents">
+                <button type="submit" className="w-full px-2 py-1.5 text-left">
+                  Sign out
+                </button>
+              </form>
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
     </header>
