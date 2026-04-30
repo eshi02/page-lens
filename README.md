@@ -31,10 +31,17 @@ Drizzle schema (`profiles`, `plans`, `subscriptions`, `audits`, `audit_cache`) w
 - Top-bar with avatar dropdown + Sign-out Server Action.
 - `ensureProfile()` idempotently creates/updates the `profiles` row on every login.
 
-**Phase 3 — Audit endpoint** _(next)_
-Server Action with Zod input + SSRF guard, HTML fetch + extract via cheerio, Gemini call, DB write, **24-hour URL-hash cache** to deduplicate Gemini calls across users, quota enforcement (3 audits / rolling 30 days for Free).
+**Phase 3 — Audit endpoint** ✅
+- Two-layer SSRF guard (lexical + DNS resolve) — blocks private IPs, cloud-metadata IPs, custom ports, file://.
+- 8s-timeout HTML fetch with ~800KB body cap.
+- cheerio-based extractor pulling title, meta, OG, h1-h3, CTA-pattern buttons/links, nav links, first ~6KB of body text.
+- Gemini 2.5 Flash with structured JSON output validated by Zod against 30+ CRO heuristics.
+- 24-hour URL-hash cache: same URL audited by 100 users = 1 Gemini call.
+- Rolling 30-day quota: 3 audits free, unlimited on Pro/Agency.
+- Dashboard UI: URL input + animated loading + score card + grouped issues.
+- `/audits` list page and `/audits/[id]` detail page.
 
-**Phase 4 — Dashboard** Audit list + detail page, downloadable PDF report.
+**Phase 4 — Polish & PDF** _(next)_ Downloadable PDF report, billing settings page, "currently auditing" progress streaming, optimistic UI updates.
 
 **Phase 5 — Billing** Stripe Checkout, webhook → plan flip in DB, Customer Portal link, Stripe Tax for GST/VAT.
 
