@@ -5,13 +5,22 @@ import { z } from 'zod'
 
 import { env } from '@/lib/env'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { ensureProfile } from '@/server/profiles'
 
 const emailSchema = z.email().max(254)
+
+// Google ID tokens are JWTs — three base64url segments separated by dots.
+const idTokenSchema = z
+  .string()
+  .min(1)
+  .regex(/^[\w-]+\.[\w-]+\.[\w-]+$/, 'invalid id_token format')
 
 export type SignInState = {
   ok?: boolean
   message?: string
 }
+
+export type GoogleSignInResult = { ok: true; next: string } | { ok: false; error: string }
 
 /**
  * Server Action: send a magic-link email. The user clicks it and lands at
@@ -47,26 +56,49 @@ export async function sendMagicLink(
 }
 
 /**
- * Server Action: start the Google OAuth flow. Redirects the browser to
- * Google's consent screen.
+ * Server Action: complete a Google sign-in started by the GIS button.
+ *
+ * The browser receives an ID token (JWT) directly from Google via the
+ * Google Identity Services SDK and forwards it here. We hand it to
+ * Supabase, which verifies the JWT signature against Google's keys and
+ * issues us a session — no client secret needed because we're not doing
+ * a code-for-token exchange.
  */
-export async function signInWithGoogle(formData: FormData) {
-  const next = String(formData.get('next') ?? '/dashboard')
-  const supabase = await createSupabaseServerClient()
-
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: `${env.APP_URL}/auth/callback?next=${encodeURIComponent(next)}`,
-      queryParams: { prompt: 'select_account' },
-    },
-  })
-
-  if (error || !data?.url) {
-    redirect(`/sign-in?error=${encodeURIComponent(error?.message ?? 'oauth-failed')}`)
+export async function signInWithGoogleIdToken(input: {
+  idToken: string
+  next?: string
+}): Promise<GoogleSignInResult> {
+  const tokenParse = idTokenSchema.safeParse(input.idToken)
+  if (!tokenParse.success) {
+    return { ok: false, error: 'Malformed Google credential.' }
   }
 
-  redirect(data.url)
+  const next = input.next && input.next.startsWith('/') ? input.next : '/dashboard'
+
+  const supabase = await createSupabaseServerClient()
+  const { data, error } = await supabase.auth.signInWithIdToken({
+    provider: 'google',
+    token: tokenParse.data,
+  })
+
+  if (error || !data.user) {
+    return { ok: false, error: error?.message ?? 'Google sign-in failed.' }
+  }
+
+  await ensureProfile({
+    id: data.user.id,
+    email: data.user.email ?? '',
+    fullName:
+      (data.user.user_metadata?.full_name as string | undefined) ??
+      (data.user.user_metadata?.name as string | undefined) ??
+      null,
+    avatarUrl:
+      (data.user.user_metadata?.avatar_url as string | undefined) ??
+      (data.user.user_metadata?.picture as string | undefined) ??
+      null,
+  })
+
+  return { ok: true, next }
 }
 
 /**
