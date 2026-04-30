@@ -35,41 +35,77 @@ Supabase magic link + Google OAuth, protected layout, sign-out.
 
 ## Local development
 
-Requires Node 20.19+ or 22.12+.
+### Prerequisites
+
+- **Node 22.12+** (this repo pins `22` via `.nvmrc` — run `nvm use` to match)
+- **Docker Desktop** (or any Docker engine) — Supabase runs inside Docker
+- **Supabase CLI** — installed automatically via `npx`, no global install needed
+
+### One-time setup
 
 ```bash
-# 1. Install deps
-npm install
+nvm use                      # picks up Node 22 from .nvmrc
+npm install                  # install deps
+cp .env.example .env.local   # then fill in GEMINI_API_KEY (and any others)
+```
 
-# 2. Copy env template; fill in Gemini key + Supabase local creds
-cp .env.example .env.local
+After your first `supabase start`, copy the printed **Publishable** and
+**Secret** keys into `.env.local` (`SUPABASE_ANON_KEY`,
+`SUPABASE_SERVICE_ROLE_KEY`, and the `NEXT_PUBLIC_*` mirror).
 
-# 3. Start Supabase locally (requires the Supabase CLI)
-#    https://supabase.com/docs/guides/local-development
-supabase start
+### Run everything (one command)
 
-# 4. Apply migrations
-npm run db:push
-
-# 5. Run the app
+```bash
 npm run dev
+```
+
+This boots:
+
+| Service           | URL                     | What it is                       |
+|-------------------|-------------------------|----------------------------------|
+| **Next.js app**   | http://localhost:3000   | The app itself                   |
+| Supabase API      | http://127.0.0.1:54321  | Auth, REST, realtime             |
+| Supabase Studio   | http://127.0.0.1:54323  | Web UI for the local DB          |
+| Mailpit           | http://127.0.0.1:54324  | Magic-link emails land here      |
+| Postgres          | 127.0.0.1:54322         | Direct DB access if you want it  |
+
+### Stop everything
+
+```bash
+npm run stop          # stops the Supabase Docker containers
+# Ctrl+C in the terminal that's running Next.js to stop the dev server
+```
+
+### First-time DB setup
+
+If the tables don't exist yet (after `supabase db reset` or on a fresh clone):
+
+```bash
+npm run db:migrate    # applies drizzle/*.sql to local Postgres
 ```
 
 ## Scripts
 
 ```
-npm run dev         # Next.js dev server (Turbopack)
-npm run build       # production build
-npm run start       # serve the built app
-npm run typecheck   # tsc --noEmit
-npm run lint        # biome lint
-npm run format      # biome format --write
-npm run check       # biome lint + format + organize imports
+npm run dev              # supabase start + next dev (one command does it all)
+npm run dev:app          # only the Next.js dev server (assumes Supabase is up)
+npm run stop             # stops Supabase containers
+npm run build            # production build
+npm run start            # serve the production build
+npm run typecheck        # tsc --noEmit
+npm run lint             # biome lint
+npm run format           # biome format --write
+npm run check            # biome lint + format + organize imports
 
-npm run db:generate # create a new migration from schema diff
-npm run db:migrate  # apply pending migrations
-npm run db:push     # push schema directly (for local dev only)
-npm run db:studio   # open Drizzle Studio
+npm run supabase:start   # only start Supabase
+npm run supabase:stop    # only stop Supabase
+npm run supabase:status  # print URLs + keys for the local stack
+npm run supabase:reset   # nuke local DB and re-apply all migrations
+
+npm run db:generate      # create a new migration from schema diff
+npm run db:migrate       # apply pending migrations
+npm run db:push          # push schema directly (only for local dev)
+npm run db:studio        # open Drizzle Studio
 ```
 
 ## Pricing

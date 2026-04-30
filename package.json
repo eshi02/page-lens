@@ -3,17 +3,26 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "supabase start && next dev",
+    "dev:app": "next dev",
+    "stop": "supabase stop",
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "lint": "biome lint .",
     "format": "biome format --write .",
     "check": "biome check --write .",
+    "supabase:start": "supabase start",
+    "supabase:stop": "supabase stop",
+    "supabase:status": "supabase status",
+    "supabase:reset": "supabase db reset",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio"
+  },
+  "engines": {
+    "node": ">=22.12"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
