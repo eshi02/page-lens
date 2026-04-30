@@ -41,7 +41,18 @@ Drizzle schema (`profiles`, `plans`, `subscriptions`, `audits`, `audit_cache`) w
 - Dashboard UI: URL input + animated loading + score card + grouped issues.
 - `/audits` list page and `/audits/[id]` detail page.
 
-**Phase 4 — Polish & PDF** _(next)_ Downloadable PDF report, billing settings page, "currently auditing" progress streaming, optimistic UI updates.
+**Phase 5a — Billing (local test mode)** ✅
+- Stripe SDK with pinned API version, idempotent `ensureStripeCustomer`.
+- `createCheckoutSession` with Stripe Tax (GST/VAT auto), allow_promotion_codes, billing-address collection.
+- Customer Portal flow via `createPortalSession` for plan changes / card / cancellation.
+- `/api/stripe/webhook` with HMAC-verified raw-body handling for the full subscription lifecycle.
+- `syncSubscriptionFromStripe` upserts our `subscriptions` table from any Stripe subscription event.
+- `/billing` page: Free / Pro ($30) / Agency ($99) cards with current-plan badge and contextual CTA.
+- Dashboard upsell banner when a free user runs out of audits.
+
+**Phase 5b — Production deploy** _(next)_ Firebase App Hosting, hosted Supabase project, Resend SMTP for real magic-link delivery, custom domain, Stripe live keys.
+
+**Phase 6 — Polish** Per-user Upstash rate limiting, Sentry, Playwright E2E, PDF export, Lighthouse 95+.
 
 **Phase 5 — Billing** Stripe Checkout, webhook → plan flip in DB, Customer Portal link, Stripe Tax for GST/VAT.
 
