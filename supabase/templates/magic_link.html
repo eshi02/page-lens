@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Sign in to Landingcheck</title>
+  </head>
+  <body style="font-family: system-ui, sans-serif; line-height: 1.5; color: #1a1a1a; max-width: 540px; margin: 40px auto; padding: 0 24px;">
+    <h2 style="margin: 0 0 16px;">Sign in to Landingcheck</h2>
+    <p style="color: #555; margin: 0 0 24px;">
+      Click the button below to sign in. The link is valid for 60 minutes.
+    </p>
+    <p style="margin: 0 0 32px;">
+      <a
+        href="http://127.0.0.1:54321/auth/v1/verify?token={{ .TokenHash }}&type=magiclink&redirect_to={{ .RedirectTo }}"
+        style="display: inline-block; padding: 12px 24px; background: #1a1a1a; color: #fff; border-radius: 6px; text-decoration: none; font-weight: 500;"
+      >
+        Sign in to Landingcheck
+      </a>
+    </p>
+    <p style="color: #888; font-size: 13px; margin: 0 0 8px;">
+      Or paste this link into your browser:
+    </p>
+    <p style="color: #888; font-size: 13px; word-break: break-all; margin: 0 0 24px;">
+      http://127.0.0.1:54321/auth/v1/verify?token={{ .TokenHash }}&type=magiclink&redirect_to={{ .RedirectTo }}
+    </p>
+    <p style="color: #888; font-size: 12px; margin-top: 32px; padding-top: 16px; border-top: 1px solid #eee;">
+      If you didn't request this email, you can safely ignore it.
+    </p>
+  </body>
+</html>

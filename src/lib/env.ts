@@ -17,7 +17,8 @@ const serverSchema = z.object({
   SUPABASE_ANON_KEY: z.string().min(1),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
 
-  GEMINI_API_KEY: z.string().min(1),
+  // Phase 3+ — required for audits to work, but app boots without it.
+  GEMINI_API_KEY: z.string().min(1).optional(),
   GEMINI_MODEL: z.string().default('gemini-2.5-flash'),
 
   STRIPE_SECRET_KEY: z.string().min(1).optional(),
