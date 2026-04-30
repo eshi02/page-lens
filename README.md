@@ -20,18 +20,25 @@ AI-graded landing page audits in 30 seconds. Paste a URL → get a score and a l
 ## Project status
 
 **Phase 1 — Foundation** ✅
-Bootstrap, design system, schema, env wiring, build pipeline.
+Next.js 16 + TypeScript + Tailwind v4 + shadcn/ui scaffold.
+Drizzle schema (`profiles`, `plans`, `subscriptions`, `audits`, `audit_cache`) with enums, indexes, FK cascades. Zod-validated server + public env split. Biome for lint/format. One-command dev (`npm run dev`).
 
-**Phase 2 — Auth** _(next)_
-Supabase magic link + Google OAuth, protected layout, sign-out.
+**Phase 2 — Auth** ✅
+- Supabase magic-link sign-in with custom email template.
+- Google sign-in via Google Identity Services (ID-token flow — **no client secret needed**, just the public client ID).
+- Cookie-based SSR session (`@supabase/ssr`); proxy refreshes tokens on every request.
+- Protected `(authed)` route group with defense-in-depth check at the layout level.
+- Top-bar with avatar dropdown + Sign-out Server Action.
+- `ensureProfile()` idempotently creates/updates the `profiles` row on every login.
 
-**Phase 3 — Audit endpoint** Server Action with SSRF guard, Gemini call, DB write, quota enforcement.
+**Phase 3 — Audit endpoint** _(next)_
+Server Action with Zod input + SSRF guard, HTML fetch + extract via cheerio, Gemini call, DB write, **24-hour URL-hash cache** to deduplicate Gemini calls across users, quota enforcement (3 audits / rolling 30 days for Free).
 
-**Phase 4 — Dashboard** Audit history, audit detail page.
+**Phase 4 — Dashboard** Audit list + detail page, downloadable PDF report.
 
-**Phase 5 — Billing** Stripe checkout, webhook → plan flip, customer portal.
+**Phase 5 — Billing** Stripe Checkout, webhook → plan flip in DB, Customer Portal link, Stripe Tax for GST/VAT.
 
-**Phase 6 — Polish** Rate limiting, audit cache, Sentry, Playwright E2E, Lighthouse 95+.
+**Phase 6 — Polish** Per-user Upstash rate limiting, Sentry, Playwright E2E, Lighthouse 95+.
 
 ## Local development
 
