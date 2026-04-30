@@ -48,6 +48,27 @@ export default async function DashboardPage() {
         </p>
       </div>
 
+      {quota.plan === 'free' && quota.limit > 0 && quota.remaining === 0 ? (
+        <div className="mt-8 rounded-lg border border-primary/30 bg-primary/5 px-5 py-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium">
+                You've used all {quota.limit} audits in your free 30-day window.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Upgrade to Pro for unlimited audits and saved history.
+              </p>
+            </div>
+            <Link
+              href="/billing"
+              className="inline-flex h-9 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+            >
+              Upgrade to Pro →
+            </Link>
+          </div>
+        </div>
+      ) : null}
+
       <div className="mt-10">
         <AuditForm
           initialQuotaUsed={quota.used}
