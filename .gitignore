@@ -32,10 +32,23 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
-
-# vercel
-.vercel
+!.env.example
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# IDEs
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Claude Code local settings
+.claude/
+
+# Supabase local CLI state
+supabase/.temp/
+supabase/.branches/
+
+# Sentry
+.sentryclirc
