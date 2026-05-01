@@ -9,7 +9,7 @@ AI-graded landing page audits in 30 seconds. Paste a URL → get a score and a l
 - **Next.js 16** (App Router, Server Components, Server Actions, Turbopack)
 - **TypeScript** strict
 - **Tailwind CSS v4 + shadcn/ui** (Base UI primitives)
-- **Supabase** (Postgres + Auth — magic link + Google OAuth)
+- **Supabase** (Postgres + Auth — Google OAuth)
 - **Drizzle ORM** with `postgres-js` driver
 - **Zod** for runtime validation at every boundary
 - **Google Gemini** via `@google/generative-ai`
@@ -26,7 +26,7 @@ Next.js 16 + TypeScript + Tailwind v4 + shadcn/ui scaffold.
 Drizzle schema (`profiles`, `plans`, `subscriptions`, `audits`, `audit_cache`) with enums, indexes, FK cascades. Zod-validated server + public env split. Biome for lint/format. One-command dev (`npm run dev`).
 
 **Phase 2 — Auth** ✅
-- Supabase magic-link sign-in with custom email template.
+- Google sign-in via Google Identity Services (ID-token flow — no client secret needed in the app, just the public client ID).
 - Google sign-in via Google Identity Services (ID-token flow — **no client secret needed**, just the public client ID).
 - Cookie-based SSR session (`@supabase/ssr`); proxy refreshes tokens on every request.
 - Protected `(authed)` route group with defense-in-depth check at the layout level.
@@ -53,7 +53,7 @@ Drizzle schema (`profiles`, `plans`, `subscriptions`, `audits`, `audit_cache`) w
 - `/billing` page: Free / Pro ($30) / Agency ($99) cards with current-plan badge and contextual CTA.
 - Dashboard upsell banner when a free user runs out of audits.
 
-**Phase 5b — Production deploy** _(next)_ Firebase App Hosting, hosted Supabase project, Resend SMTP for real magic-link delivery, custom domain, Dodo live keys.
+**Phase 5b — Production deploy** _(next)_ Firebase App Hosting, hosted Supabase project, custom domain, Dodo live keys.
 
 **Phase 6 — Polish** Per-user Upstash rate limiting, Sentry, Playwright E2E, PDF export, Lighthouse 95+.
 

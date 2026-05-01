@@ -48,7 +48,7 @@ export default async function SignInPage({
             </span>
           </h1>
           <p className="text-pretty text-sm text-muted-foreground">
-            Magic link via email or Google sign-in. No passwords, ever.
+            One click with Google. No passwords, no email codes.
           </p>
         </div>
 
