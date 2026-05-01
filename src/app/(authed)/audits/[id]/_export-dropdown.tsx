@@ -68,20 +68,57 @@ export function ExportDropdown({
   async function handleDownload(format: Format) {
     setBusyFormat(format)
     try {
-      // Drive a real download via a hidden anchor — the route returns
-      // the file with a Content-Disposition header so the browser saves
-      // it. Using fetch + blob would also work but anchor is simpler
-      // and handles auth cookies natively.
+      if (format === 'md' || format === 'csv') {
+        // Synchronous endpoint — the response IS the file. Anchor click
+        // pulls cookies and lets the browser handle Save As.
+        const a = document.createElement('a')
+        a.href = `/api/audits/${auditId}/export?format=${format}`
+        a.rel = 'noopener'
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+        return
+      }
+
+      // PDF is async: queue → poll → download.
+      const queued = await fetch(`/api/audits/${auditId}/export?format=pdf`)
+      if (!queued.ok) {
+        throw new Error(`Failed to queue PDF (${queued.status})`)
+      }
+      const { jobId } = (await queued.json()) as { jobId: string }
+
+      // Poll up to ~60s. PDFs typically finish in 1-3s.
+      const startedAt = Date.now()
+      const timeoutMs = 60_000
+      while (true) {
+        await new Promise((r) => setTimeout(r, 800))
+        const status = await fetch(`/api/exports/${jobId}`)
+        if (!status.ok) throw new Error(`Status check failed (${status.status})`)
+        const body = (await status.json()) as {
+          status: 'pending' | 'processing' | 'done' | 'failed'
+          error?: string
+        }
+        if (body.status === 'done') break
+        if (body.status === 'failed') {
+          throw new Error(body.error ?? 'PDF render failed.')
+        }
+        if (Date.now() - startedAt > timeoutMs) {
+          throw new Error('PDF is taking longer than expected — try again.')
+        }
+      }
+
+      // Trigger the download from the same job endpoint.
       const a = document.createElement('a')
-      a.href = `/api/audits/${auditId}/export?format=${format}`
+      a.href = `/api/exports/${jobId}?download=1`
       a.rel = 'noopener'
       document.body.appendChild(a)
       a.click()
       a.remove()
+    } catch (err) {
+      console.error('[export]', err)
+      alert(err instanceof Error ? err.message : 'Export failed.')
     } finally {
-      // Re-enable button after a short delay; the actual download is
-      // out of our control once the browser takes over.
-      setTimeout(() => setBusyFormat(null), 800)
+      setBusyFormat(null)
     }
   }
 
@@ -127,7 +164,7 @@ export function ExportDropdown({
                 </div>
                 {busy ? (
                   <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                    …
+                    {item.format === 'pdf' ? 'rendering' : '…'}
                   </span>
                 ) : null}
               </div>

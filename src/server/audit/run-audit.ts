@@ -14,6 +14,7 @@ import { extractFromHtml } from './extract'
 import { fetchHtml } from './fetch-html'
 import { gradeWithGemini, type AuditPayload } from './gemini'
 import { getQuotaState, type QuotaState } from './quota'
+import { recordIssueStats } from './stats'
 import { validateUrl } from './url-guard'
 
 const RECENT_AUDIT_WINDOW_MS = 24 * 60 * 60 * 1000 // matches cache TTL
@@ -135,6 +136,14 @@ export async function runAudit(
       id: schema.audits.id,
       createdAt: schema.audits.createdAt,
     })
+
+  // Bump per-user issue stats — only on fresh audits, not cache hits.
+  // Cache hits return the same issues we'd have already counted on
+  // first run; double-counting would inflate the dashboard's "top
+  // recurring issues" card.
+  if (!usedCache && row) {
+    await recordIssueStats(userId, payload.issues, row.createdAt)
+  }
 
   const quotaAfter = await getQuotaState(userId)
 

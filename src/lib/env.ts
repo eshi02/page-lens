@@ -11,7 +11,14 @@ import { z } from 'zod'
 const serverSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
 
+  // Application-runtime DB URL. In production point this at Supabase's
+  // pgbouncer pooler endpoint (port 6543) — prepared statements are
+  // disabled in the driver so this works in transaction mode.
   DATABASE_URL: z.string().min(1),
+  // Direct (non-pooled) connection URL — used by drizzle-kit for
+  // migrations and any DDL that the pooler can't proxy. In local dev
+  // this can be the same as DATABASE_URL.
+  DIRECT_URL: z.string().min(1).optional(),
 
   SUPABASE_URL: z.string().url(),
   SUPABASE_ANON_KEY: z.string().min(1),
@@ -30,6 +37,11 @@ const serverSchema = z.object({
 
   UPSTASH_REDIS_REST_URL: z.string().url().optional(),
   UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
+
+  // Shared secret guarding internal scheduled-task endpoints
+  // (e.g. /api/internal/cleanup). Set to a long random string in prod
+  // and pass via `Authorization: Bearer <secret>` from Cloud Scheduler.
+  INTERNAL_CRON_SECRET: z.string().min(16).optional(),
 
   SENTRY_DSN: z.string().url().optional(),
 

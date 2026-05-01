@@ -37,7 +37,7 @@ export function TopBar({ userId, user }: { userId: string; user: TopBarUser }) {
             aria-hidden
             className="size-5 rounded-md bg-gradient-to-br from-primary via-primary/70 to-primary/40 ring-1 ring-primary/40 transition-transform group-hover:scale-110"
           />
-          <span className="text-sm font-semibold tracking-tight">Landingcheck</span>
+          <span className="text-sm font-semibold tracking-tight">LandingCheck</span>
           <span
             className="hidden rounded-md border border-primary/40 bg-primary/10 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-primary sm:inline-block"
             title="Beta — features may change"

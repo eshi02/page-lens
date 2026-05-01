@@ -3,9 +3,9 @@ import { redirect } from 'next/navigation'
 
 import { Sparkline } from '@/components/sparkline'
 import { db, schema } from '@/db/client'
-import type { AuditIssue } from '@/db/schema'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { getQuotaState } from '@/server/audit/quota'
+import { getTopIssues } from '@/server/audit/stats'
 import { desc, eq } from 'drizzle-orm'
 
 import { AuditForm } from './_audit-form'
@@ -25,7 +25,7 @@ export default async function DashboardPage({
 
   const { url: prefillUrl } = await searchParams
 
-  const [quota, recent, trendRows, allIssueRows, proPlan] = await Promise.all([
+  const [quota, recent, trendRows, topRecurringIssues, proPlan] = await Promise.all([
     getQuotaState(user.id),
     db
       .select({
@@ -45,15 +45,10 @@ export default async function DashboardPage({
       .where(eq(schema.audits.userId, user.id))
       .orderBy(desc(schema.audits.createdAt))
       .limit(12),
-    // Issue payloads from last 30 audits — used to compute "top recurring
-    // issues". Pulling jsonb client-side is cheap at this volume; revisit
-    // if a power user crosses ~500 audits.
-    db
-      .select({ issues: schema.audits.issues })
-      .from(schema.audits)
-      .where(eq(schema.audits.userId, user.id))
-      .orderBy(desc(schema.audits.createdAt))
-      .limit(30),
+    // Top recurring issues — single indexed read against the
+    // denormalized user_issue_stats table. Maintained by recordIssueStats
+    // on every fresh audit; constant-time regardless of audit count.
+    getTopIssues(user.id, 5),
     db
       .select({ priceCents: schema.plans.priceCents })
       .from(schema.plans)
@@ -66,8 +61,6 @@ export default async function DashboardPage({
     .map((r) => r.score)
     .filter((s): s is number => s != null)
     .reverse() // oldest → newest for the sparkline
-
-  const topRecurringIssues = computeTopIssues(allIssueRows.map((r) => r.issues ?? []))
 
   const displayName = (user.user_metadata?.full_name as string | undefined) ?? null
   const firstName = displayName?.split(' ')[0]
@@ -207,7 +200,7 @@ export default async function DashboardPage({
         </div>
 
         <p className="mt-16 text-center font-mono text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
-          Landingcheck · v1 · beta
+          LandingCheck · v1 · beta
         </p>
       </div>
     </main>
@@ -431,43 +424,6 @@ function scoreTone(score: number) {
   return 'text-rose-400'
 }
 
-/**
- * Counts each issue key across the user's recent audits, returning the
- * top 5 sorted by frequency × severity weight (errors > warnings). Issues
- * marked `good` are excluded — those are passing checks, not problems.
- */
-function computeTopIssues(
-  issuesPerAudit: AuditIssue[][],
-): Array<{ key: string; count: number; severity: 'error' | 'warning' }> {
-  const stats = new Map<
-    string,
-    { count: number; errorCount: number; warningCount: number }
-  >()
-
-  for (const issues of issuesPerAudit) {
-    for (const i of issues) {
-      if (i.severity === 'good') continue
-      const cur = stats.get(i.key) ?? { count: 0, errorCount: 0, warningCount: 0 }
-      cur.count += 1
-      if (i.severity === 'error') cur.errorCount += 1
-      else cur.warningCount += 1
-      stats.set(i.key, cur)
-    }
-  }
-
-  return Array.from(stats.entries())
-    .map(([key, s]) => ({
-      key,
-      count: s.count,
-      // Severity = whichever is more common across this issue's hits
-      severity:
-        s.errorCount >= s.warningCount ? ('error' as const) : ('warning' as const),
-      score: s.count + s.errorCount * 0.5, // weight errors slightly more
-    }))
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 5)
-    .map(({ key, count, severity }) => ({ key, count, severity }))
-}
 
 // Conversion-rate tips drawn from common findings across the heuristic
 // set. Picks one deterministically per day so the dashboard refreshes

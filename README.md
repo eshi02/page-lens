@@ -1,4 +1,4 @@
-# Landingcheck
+# LandingCheck
 
 AI-graded landing page audits in 30 seconds. Paste a URL → get a score and a list of specific, actionable conversion-rate fixes.
 

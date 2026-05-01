@@ -2,7 +2,7 @@ import 'server-only'
 
 import { createHash } from 'node:crypto'
 
-import { and, eq, gt } from 'drizzle-orm'
+import { and, eq, gt, lt } from 'drizzle-orm'
 
 import { db, schema } from '@/db/client'
 
@@ -61,6 +61,23 @@ export async function readCache(hash: string): Promise<{
       issues: row.issues ?? [],
     },
   }
+}
+
+/**
+ * Bulk-delete expired cache entries. Safe to run idempotently — works
+ * by `expires_at` rather than TTL math, so concurrent invocations from
+ * multiple Cloud Run instances can't double-delete or miss rows.
+ *
+ * Wire this up via a cron in production (Supabase pg_cron, or a Cloud
+ * Scheduler hitting a /api/internal/cleanup endpoint nightly).
+ */
+export async function cleanupExpiredCache(): Promise<{ deleted: number }> {
+  const now = new Date()
+  const result = await db
+    .delete(schema.auditCache)
+    .where(lt(schema.auditCache.expiresAt, now))
+    .returning({ urlHash: schema.auditCache.urlHash })
+  return { deleted: result.length }
 }
 
 export async function writeCache(

@@ -1,0 +1,139 @@
+# Firebase App Hosting → Cloud Run configuration
+# Reference: https://firebase.google.com/docs/app-hosting/configure
+#
+# Deploys via:
+#   firebase deploy --only apphosting
+#
+# All sensitive values (DATABASE_URL, GEMINI_API_KEY, DODO_PAYMENTS_API_KEY,
+# DODO_WEBHOOK_SECRET, INTERNAL_CRON_SECRET, etc.) MUST be stored in Secret
+# Manager and referenced via `secret:` — never inline as `value:`.
+
+runConfig:
+  # ---- Autoscaling ----
+  # Min instances: keep 1 warm so the first request after idle isn't a
+  # cold start (~3-5s on Next.js). Bump to 2 for HA when traffic is real.
+  minInstances: 1
+  # Max instances: protects your bill from runaway traffic. Each instance
+  # is roughly 1 vCPU + 1GB. 10 instances at full load handles ~800 RPS
+  # of cheap routes or ~50 audits/min. Raise after monitoring.
+  maxInstances: 10
+  # Concurrency: how many simultaneous requests one instance handles.
+  # Most routes are I/O-bound (DB + Gemini) so 80 is comfortable. PDF
+  # rendering is CPU-heavy though — if you see timeouts on /export?format=pdf
+  # under load, drop to 40 or move PDFs to a queue.
+  concurrency: 80
+  # CPU + memory: 1 vCPU + 1024Mi covers Next.js + @react-pdf/renderer
+  # comfortably. PDF generation peaks around 300MB; SSR is ~150MB; rest
+  # is headroom.
+  cpu: 1
+  memoryMiB: 1024
+  # CPU is allocated only during request processing. Saves cost when idle
+  # but means background timers don't run between requests — which is
+  # what we want; we use Cloud Scheduler for cron, not setInterval.
+  cpuAlwaysAllocated: false
+  # Per-request timeout. Audit grading is ~3-5s typical, ~15s worst case
+  # (Gemini overload retry). 60s gives headroom for slow upstream pages.
+  timeoutSeconds: 60
+
+env:
+  # ---- Public (browser-readable) ----
+  - variable: NEXT_PUBLIC_APP_URL
+    value: https://landingcheck.app
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_SUPABASE_URL
+    secret: NEXT_PUBLIC_SUPABASE_URL
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_SUPABASE_ANON_KEY
+    secret: NEXT_PUBLIC_SUPABASE_ANON_KEY
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_GOOGLE_CLIENT_ID
+    secret: NEXT_PUBLIC_GOOGLE_CLIENT_ID
+    availability:
+      - BUILD
+      - RUNTIME
+
+  # ---- Server-only ----
+  - variable: NODE_ENV
+    value: production
+    availability:
+      - RUNTIME
+  - variable: APP_URL
+    value: https://landingcheck.app
+    availability:
+      - RUNTIME
+
+  # Postgres: pooler for runtime, direct for migrations
+  - variable: DATABASE_URL
+    secret: DATABASE_URL
+    availability:
+      - RUNTIME
+  - variable: DIRECT_URL
+    secret: DIRECT_URL
+    availability:
+      - BUILD
+
+  # Supabase server-side
+  - variable: SUPABASE_URL
+    secret: SUPABASE_URL
+    availability:
+      - RUNTIME
+  - variable: SUPABASE_ANON_KEY
+    secret: SUPABASE_ANON_KEY
+    availability:
+      - RUNTIME
+  - variable: SUPABASE_SERVICE_ROLE_KEY
+    secret: SUPABASE_SERVICE_ROLE_KEY
+    availability:
+      - RUNTIME
+
+  # Gemini
+  - variable: GEMINI_API_KEY
+    secret: GEMINI_API_KEY
+    availability:
+      - RUNTIME
+  - variable: GEMINI_MODEL
+    value: gemini-2.5-flash
+    availability:
+      - RUNTIME
+
+  # Dodo Payments (set after creating live products in Dodo dashboard)
+  - variable: DODO_PAYMENTS_API_KEY
+    secret: DODO_PAYMENTS_API_KEY
+    availability:
+      - RUNTIME
+  - variable: DODO_WEBHOOK_SECRET
+    secret: DODO_WEBHOOK_SECRET
+    availability:
+      - RUNTIME
+  - variable: DODO_ENVIRONMENT
+    value: live_mode
+    availability:
+      - RUNTIME
+
+  # Upstash (rate limiting). Without these RL silently disables — bad in prod.
+  - variable: UPSTASH_REDIS_REST_URL
+    secret: UPSTASH_REDIS_REST_URL
+    availability:
+      - RUNTIME
+  - variable: UPSTASH_REDIS_REST_TOKEN
+    secret: UPSTASH_REDIS_REST_TOKEN
+    availability:
+      - RUNTIME
+
+  # Cloud Scheduler shared secret for /api/internal/cleanup
+  - variable: INTERNAL_CRON_SECRET
+    secret: INTERNAL_CRON_SECRET
+    availability:
+      - RUNTIME
+
+  # Sentry (Phase 6) — uncomment after creating a Sentry project
+  # - variable: SENTRY_DSN
+  #   secret: SENTRY_DSN
+  #   availability:
+  #     - RUNTIME

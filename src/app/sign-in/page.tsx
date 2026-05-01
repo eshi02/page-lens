@@ -44,7 +44,7 @@ export default async function SignInPage({
           <h1 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
             Sign in to{' '}
             <span className="bg-gradient-to-br from-primary via-primary/70 to-primary/40 bg-clip-text text-transparent">
-              Landingcheck
+              LandingCheck
             </span>
           </h1>
           <p className="text-pretty text-sm text-muted-foreground">

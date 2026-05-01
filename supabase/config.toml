@@ -245,7 +245,7 @@ otp_expiry = 3600
 # content_path = "./supabase/templates/invite.html"
 
 [auth.email.template.magic_link]
-subject = "Sign in to Landingcheck"
+subject = "Sign in to LandingCheck"
 content_path = "./supabase/templates/magic_link.html"
 
 # Uncomment to customize notification email template

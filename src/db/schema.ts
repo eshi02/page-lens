@@ -1,15 +1,26 @@
 import {
   boolean,
+  customType,
   index,
   integer,
   jsonb,
   pgEnum,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core'
+
+const bytea = customType<{ data: Buffer; default: false }>({
+  dataType() {
+    return 'bytea'
+  },
+  toDriver(value: Buffer) {
+    return value
+  },
+})
 
 /**
  * Plan slugs map 1:1 to Dodo Payments products. Pricing is enforced
@@ -28,6 +39,12 @@ export const subscriptionStatus = pgEnum('subscription_status', [
 ])
 export const auditStatus = pgEnum('audit_status', ['pending', 'success', 'failed'])
 export const issueSeverity = pgEnum('issue_severity', ['good', 'warning', 'error'])
+export const exportJobStatus = pgEnum('export_job_status', [
+  'pending',
+  'processing',
+  'done',
+  'failed',
+])
 
 /**
  * profiles.id matches auth.users.id from Supabase Auth.
@@ -134,8 +151,63 @@ export const auditCache = pgTable(
   (t) => [index('audit_cache_expires_idx').on(t.expiresAt)],
 )
 
+/**
+ * Background job rows for async exports (currently PDF only). The
+ * route handler creates a row in `pending`, kicks off render via
+ * waitUntil, and updates to `done` with `pdf_data` populated. The
+ * client polls /api/exports/[id] for status; once `done`, it fetches
+ * the bytes.
+ */
+export const exportJobs = pgTable(
+  'export_jobs',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => profiles.id, { onDelete: 'cascade' }),
+    auditId: uuid('audit_id').notNull(),
+    format: text('format').notNull(), // 'pdf' for now; room to grow
+    status: exportJobStatus('status').notNull().default('pending'),
+    pdfData: bytea('pdf_data'),
+    errorMessage: text('error_message'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
+  },
+  (t) => [
+    index('export_jobs_user_idx').on(t.userId, t.createdAt),
+    index('export_jobs_status_idx').on(t.status, t.createdAt),
+  ],
+)
+
+/**
+ * Denormalized per-user issue counters. Updated on every audit insert
+ * so the dashboard's "Top recurring issues" card can do a single
+ * indexed read instead of pulling and parsing the last 30 audits'
+ * JSONB. The trade-off is one extra UPSERT per issue at audit time —
+ * trivial vs. the read-side savings.
+ */
+export const userIssueStats = pgTable(
+  'user_issue_stats',
+  {
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => profiles.id, { onDelete: 'cascade' }),
+    issueKey: text('issue_key').notNull(),
+    errorCount: integer('error_count').notNull().default(0),
+    warningCount: integer('warning_count').notNull().default(0),
+    totalCount: integer('total_count').notNull().default(0),
+    lastSeenAt: timestamp('last_seen_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.issueKey] }),
+    index('user_issue_stats_user_count_idx').on(t.userId, t.totalCount),
+  ],
+)
+
 export type Profile = typeof profiles.$inferSelect
 export type NewProfile = typeof profiles.$inferInsert
 export type Plan = typeof plans.$inferSelect
 export type Subscription = typeof subscriptions.$inferSelect
 export type Audit = typeof audits.$inferSelect
+export type ExportJob = typeof exportJobs.$inferSelect
+export type UserIssueStat = typeof userIssueStats.$inferSelect

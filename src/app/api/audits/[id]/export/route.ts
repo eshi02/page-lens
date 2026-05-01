@@ -1,10 +1,12 @@
+import { after } from 'next/server'
 import { NextResponse, type NextRequest } from 'next/server'
 
 import { db, schema } from '@/db/client'
+import { rateLimit } from '@/lib/rate-limit'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { getQuotaState } from '@/server/audit/quota'
 import { toCsv, toMarkdown } from '@/server/audit/export'
-import { renderAuditPdf } from '@/server/audit/pdf-report'
+import { enqueuePdfJob, renderPdfJob } from '@/server/audit/pdf-queue'
 import { and, eq } from 'drizzle-orm'
 
 export const runtime = 'nodejs'
@@ -46,6 +48,26 @@ export async function GET(
   } = await supabase.auth.getUser()
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
+  }
+
+  // Burst protection: 30 exports/min per user. Cheap call, but PDF
+  // rendering uses CPU and we don't want a script to saturate an
+  // instance with concurrent renders.
+  const rl = await rateLimit('export', `user:${user.id}`)
+  if (!rl.ok) {
+    const resetSec = Math.max(1, Math.ceil((rl.reset - Date.now()) / 1000))
+    return NextResponse.json(
+      { error: `Rate limited. Try again in ${resetSec}s.` },
+      {
+        status: 429,
+        headers: {
+          'retry-after': String(resetSec),
+          'x-ratelimit-limit': String(rl.limit),
+          'x-ratelimit-remaining': '0',
+          'x-ratelimit-reset': String(Math.floor(rl.reset / 1000)),
+        },
+      },
+    )
   }
 
   // PDF is gated behind an actual paid plan (Pro / Agency). Trial users
@@ -99,13 +121,17 @@ export async function GET(
     })
   }
 
-  // PDF
-  const pdf = await renderAuditPdf(audit)
-  return new NextResponse(new Uint8Array(pdf), {
-    status: 200,
-    headers: {
-      'content-type': 'application/pdf',
-      'content-disposition': `attachment; filename="${safeFilename(audit.url, 'pdf')}"`,
-    },
+  // PDF: queue + render in background. Response returns immediately
+  // with the job id; the client polls GET /api/exports/[jobId] for
+  // status and the file bytes when ready.
+  const { jobId } = await enqueuePdfJob(user.id, id)
+  // `after` (Next 15+) keeps the runtime alive past response close so
+  // the render completes even though the HTTP response has been sent.
+  after(async () => {
+    await renderPdfJob(jobId)
   })
+  return NextResponse.json(
+    { jobId, status: 'pending', filename: safeFilename(audit.url, 'pdf') },
+    { status: 202 },
+  )
 }
