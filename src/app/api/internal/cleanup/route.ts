@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic'
  *
  *   gcloud scheduler jobs create http audit-cache-cleanup \
  *     --schedule="0 3 * * *" \
- *     --uri=https://landingcheck.app/api/internal/cleanup \
+ *     --uri=https://pagelens.app/api/internal/cleanup \
  *     --http-method=POST \
  *     --headers="Authorization=Bearer $INTERNAL_CRON_SECRET"
  */

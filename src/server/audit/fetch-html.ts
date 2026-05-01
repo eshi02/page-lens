@@ -3,7 +3,7 @@ import 'server-only'
 const FETCH_TIMEOUT_MS = 8_000
 const MAX_HTML_BYTES = 800_000
 
-const USER_AGENT = 'LandingCheckBot/1.0 (+https://landingcheck.app/about/bot)'
+const USER_AGENT = 'PageLensBot/1.0 (+https://pagelens.app/about/bot)'
 
 export type FetchResult =
   | { ok: true; html: string; finalUrl: string }

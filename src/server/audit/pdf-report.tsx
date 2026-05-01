@@ -198,15 +198,15 @@ function AuditPdf({ audit }: { audit: ExportableAudit }) {
 
   return (
     <Document
-      title={`LandingCheck — ${audit.url}`}
-      author="LandingCheck"
-      creator="LandingCheck"
-      producer="LandingCheck"
+      title={`PageLens — ${audit.url}`}
+      author="PageLens"
+      creator="PageLens"
+      producer="PageLens"
     >
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
           <View>
-            <Text style={styles.brand}>LandingCheck</Text>
+            <Text style={styles.brand}>PageLens</Text>
             <Text style={styles.brandSub}>AI-graded landing page audit</Text>
           </View>
           <Text style={styles.meta}>
@@ -297,7 +297,7 @@ function AuditPdf({ audit }: { audit: ExportableAudit }) {
         <Text
           style={styles.footer}
           render={({ pageNumber, totalPages }) =>
-            `LandingCheck · Page ${pageNumber} of ${totalPages} · landingcheck.app`
+            `PageLens · Page ${pageNumber} of ${totalPages} · pagelens.app`
           }
           fixed
         />

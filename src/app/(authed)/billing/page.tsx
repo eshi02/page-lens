@@ -81,10 +81,10 @@ export default async function BillingPage({
           <Banner tone="muted">
             Checkout is being set up — paid plans go live shortly. Drop us a line at{' '}
             <a
-              href="mailto:hello@landingcheck.app"
+              href="mailto:hello@pagelens.app"
               className="underline underline-offset-4 hover:text-foreground"
             >
-              hello@landingcheck.app
+              hello@pagelens.app
             </a>{' '}
             to upgrade in the meantime.
           </Banner>

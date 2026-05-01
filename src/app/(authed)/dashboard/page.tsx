@@ -200,7 +200,7 @@ export default async function DashboardPage({
         </div>
 
         <p className="mt-16 text-center font-mono text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
-          LandingCheck · v1 · beta
+          PageLens · v1 · beta
         </p>
       </div>
     </main>

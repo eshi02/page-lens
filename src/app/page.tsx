@@ -23,7 +23,7 @@ export default async function Home() {
             aria-hidden
             className="size-5 rounded-md bg-gradient-to-br from-primary via-primary/70 to-primary/40 ring-1 ring-primary/40"
           />
-          <span className="text-sm font-semibold tracking-tight">LandingCheck</span>
+          <span className="text-sm font-semibold tracking-tight">PageLens</span>
           <span
             className="hidden rounded-md border border-primary/40 bg-primary/10 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-primary sm:inline-block"
             title="Beta — features may change"
@@ -118,7 +118,7 @@ export default async function Home() {
 
       <footer className="mx-auto max-w-6xl border-t border-border/40 px-6 py-8 text-xs text-muted-foreground">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <span className="font-mono">© 2026 LandingCheck</span>
+          <span className="font-mono">© 2026 PageLens</span>
           <span className="flex items-center gap-2">
             <span className="size-1.5 animate-pulse rounded-full bg-emerald-400" />
             All systems operational

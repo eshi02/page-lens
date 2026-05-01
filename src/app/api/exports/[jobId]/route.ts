@@ -14,7 +14,7 @@ function safeFilename(url: string, ext: string) {
     .replace(/[^a-z0-9]+/gi, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, 60) || 'audit'
-  return `landingcheck-${slug}.${ext}`
+  return `pagelens-${slug}.${ext}`
 }
 
 /**
