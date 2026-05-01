@@ -11,7 +11,7 @@ AI-graded landing page audits in 30 seconds. Paste a URL → get a score and a l
 - **Drizzle ORM** with `postgres-js` driver
 - **Zod** for runtime validation at every boundary
 - **Google Gemini** via `@google/generative-ai`
-- **Stripe** + Stripe Tax for subscriptions
+- **Dodo Payments** (Merchant of Record) for subscriptions — handles global tax in 150+ countries and settles INR to an Indian bank as export of services with FIRA
 - **Upstash Redis** for per-user rate limiting
 - **Sentry** for error tracking
 - **Biome** for lint + format
@@ -41,22 +41,19 @@ Drizzle schema (`profiles`, `plans`, `subscriptions`, `audits`, `audit_cache`) w
 - Dashboard UI: URL input + animated loading + score card + grouped issues.
 - `/audits` list page and `/audits/[id]` detail page.
 
-**Phase 5a — Billing (local test mode)** ✅
-- Stripe SDK with pinned API version, idempotent `ensureStripeCustomer`.
-- `createCheckoutSession` with Stripe Tax (GST/VAT auto), allow_promotion_codes, billing-address collection.
-- Customer Portal flow via `createPortalSession` for plan changes / card / cancellation.
-- `/api/stripe/webhook` with HMAC-verified raw-body handling for the full subscription lifecycle.
-- `syncSubscriptionFromStripe` upserts our `subscriptions` table from any Stripe subscription event.
+**Phase 5a — Billing via Dodo Payments** ✅
+- Dodo Payments SDK singleton with `test_mode` / `live_mode` toggle. Indian-domiciled MoR — handles global tax (GST/VAT/sales tax) automatically and settles INR to an Indian bank with FIRA auto-generated.
+- Idempotent `ensureDodoCustomer` linking each profile to a Dodo customer ID.
+- `createCheckoutSession` calling `client.checkoutSessions.create` with `product_cart` + metadata (`user_id`, `plan_slug`).
+- Customer Portal flow via `createPortalSession` for card / plan / cancellation.
+- `/api/dodo/webhook` route verifying Standard Webhooks signatures (`webhook-id` / `webhook-signature` / `webhook-timestamp`) via `client.webhooks.unwrap`.
+- `syncSubscriptionFromDodo` upserts `subscriptions` table on every subscription lifecycle event (`subscription.active|renewed|on_hold|failed|expired|plan_changed|updated|cancelled`).
 - `/billing` page: Free / Pro ($30) / Agency ($99) cards with current-plan badge and contextual CTA.
 - Dashboard upsell banner when a free user runs out of audits.
 
-**Phase 5b — Production deploy** _(next)_ Firebase App Hosting, hosted Supabase project, Resend SMTP for real magic-link delivery, custom domain, Stripe live keys.
+**Phase 5b — Production deploy** _(next)_ Firebase App Hosting, hosted Supabase project, Resend SMTP for real magic-link delivery, custom domain, Dodo live keys.
 
 **Phase 6 — Polish** Per-user Upstash rate limiting, Sentry, Playwright E2E, PDF export, Lighthouse 95+.
-
-**Phase 5 — Billing** Stripe Checkout, webhook → plan flip in DB, Customer Portal link, Stripe Tax for GST/VAT.
-
-**Phase 6 — Polish** Per-user Upstash rate limiting, Sentry, Playwright E2E, Lighthouse 95+.
 
 ## Local development
 

@@ -12,19 +12,19 @@ import {
 } from 'drizzle-orm/pg-core'
 
 /**
- * Plan slugs map 1:1 to Stripe Products. Pricing is enforced server-side
- * by reading the row, never trusted from the client.
+ * Plan slugs map 1:1 to Dodo Payments products. Pricing is enforced
+ * server-side by reading the row, never trusted from the client.
  */
 export const planSlug = pgEnum('plan_slug', ['free', 'pro', 'agency'])
+// Mirrors Dodo's SubscriptionStatus union exactly so we can store webhook
+// payloads verbatim without translation.
 export const subscriptionStatus = pgEnum('subscription_status', [
+  'pending',
   'active',
-  'trialing',
-  'past_due',
-  'canceled',
-  'incomplete',
-  'incomplete_expired',
-  'unpaid',
-  'paused',
+  'on_hold',
+  'cancelled',
+  'failed',
+  'expired',
 ])
 export const auditStatus = pgEnum('audit_status', ['pending', 'success', 'failed'])
 export const issueSeverity = pgEnum('issue_severity', ['good', 'warning', 'error'])
@@ -40,7 +40,10 @@ export const profiles = pgTable(
     email: text('email').notNull(),
     fullName: text('full_name'),
     avatarUrl: text('avatar_url'),
-    stripeCustomerId: text('stripe_customer_id'),
+    dodoCustomerId: text('dodo_customer_id'),
+    // 21-day Pro trial ends at this timestamp. Set once at first sign-in
+    // and never refreshed — re-signing in doesn't restart the trial.
+    trialEndsAt: timestamp('trial_ends_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
@@ -56,7 +59,7 @@ export const plans = pgTable('plans', {
   name: text('name').notNull(),
   monthlyAuditQuota: integer('monthly_audit_quota').notNull(),
   priceCents: integer('price_cents').notNull(),
-  stripePriceId: text('stripe_price_id'),
+  dodoProductId: text('dodo_product_id'),
   features: jsonb('features').$type<string[]>().notNull().default([]),
 })
 
@@ -71,7 +74,7 @@ export const subscriptions = pgTable(
       .notNull()
       .references(() => plans.slug),
     status: subscriptionStatus('status').notNull(),
-    stripeSubscriptionId: text('stripe_subscription_id'),
+    dodoSubscriptionId: text('dodo_subscription_id'),
     currentPeriodStart: timestamp('current_period_start', { withTimezone: true }),
     currentPeriodEnd: timestamp('current_period_end', { withTimezone: true }),
     cancelAtPeriodEnd: boolean('cancel_at_period_end').notNull().default(false),
@@ -80,7 +83,7 @@ export const subscriptions = pgTable(
   },
   (t) => [
     index('subscriptions_user_idx').on(t.userId),
-    uniqueIndex('subscriptions_stripe_sub_idx').on(t.stripeSubscriptionId),
+    uniqueIndex('subscriptions_dodo_sub_idx').on(t.dodoSubscriptionId),
   ],
 )
 

@@ -7,9 +7,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-jetbrains-mono);
+  --font-heading: var(--font-geist-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -48,73 +48,79 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* ============================================================
+   LIGHT MODE — off-white bg, violet primary, traffic-light scores
+   ============================================================ */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --background: oklch(0.99 0.003 280);
+  --foreground: oklch(0.18 0.01 280);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.18 0.01 280);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --popover-foreground: oklch(0.18 0.01 280);
+  --primary: oklch(0.55 0.22 290);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.96 0.01 280);
+  --secondary-foreground: oklch(0.22 0.01 280);
+  --muted: oklch(0.96 0.005 280);
+  --muted-foreground: oklch(0.5 0.02 280);
+  --accent: oklch(0.94 0.04 290);
+  --accent-foreground: oklch(0.35 0.18 290);
+  --destructive: oklch(0.6 0.22 18);
+  --border: oklch(0.91 0.008 280);
+  --input: oklch(0.91 0.008 280);
+  --ring: oklch(0.55 0.22 290);
+  --chart-1: oklch(0.62 0.22 290);
+  --chart-2: oklch(0.7 0.18 145);
+  --chart-3: oklch(0.78 0.16 75);
+  --chart-4: oklch(0.62 0.22 18);
+  --chart-5: oklch(0.62 0.18 230);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: oklch(0.985 0.003 280);
+  --sidebar-foreground: oklch(0.18 0.01 280);
+  --sidebar-primary: oklch(0.55 0.22 290);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.94 0.04 290);
+  --sidebar-accent-foreground: oklch(0.35 0.18 290);
+  --sidebar-border: oklch(0.91 0.008 280);
+  --sidebar-ring: oklch(0.55 0.22 290);
 }
 
+/* ============================================================
+   DARK MODE — charcoal bg (not pure black), violet primary
+   ============================================================ */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: oklch(0.16 0.01 280);
+  --foreground: oklch(0.96 0.005 280);
+  --card: oklch(0.2 0.012 280);
+  --card-foreground: oklch(0.96 0.005 280);
+  --popover: oklch(0.2 0.012 280);
+  --popover-foreground: oklch(0.96 0.005 280);
+  --primary: oklch(0.7 0.22 290);
+  --primary-foreground: oklch(0.16 0.01 280);
+  --secondary: oklch(0.26 0.015 280);
+  --secondary-foreground: oklch(0.96 0.005 280);
+  --muted: oklch(0.24 0.012 280);
+  --muted-foreground: oklch(0.68 0.015 280);
+  --accent: oklch(0.3 0.06 290);
+  --accent-foreground: oklch(0.85 0.12 290);
+  --destructive: oklch(0.7 0.2 18);
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.7 0.22 290);
+  --chart-1: oklch(0.7 0.22 290);
+  --chart-2: oklch(0.78 0.18 145);
+  --chart-3: oklch(0.82 0.16 75);
+  --chart-4: oklch(0.7 0.22 18);
+  --chart-5: oklch(0.7 0.18 230);
+  --sidebar: oklch(0.18 0.012 280);
+  --sidebar-foreground: oklch(0.96 0.005 280);
+  --sidebar-primary: oklch(0.7 0.22 290);
+  --sidebar-primary-foreground: oklch(0.16 0.01 280);
+  --sidebar-accent: oklch(0.3 0.06 290);
+  --sidebar-accent-foreground: oklch(0.85 0.12 290);
+  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar-ring: oklch(0.7 0.22 290);
 }
 
 @layer base {
@@ -123,8 +129,95 @@
   }
   body {
     @apply bg-background text-foreground;
+    position: relative;
   }
   html {
     @apply font-sans;
+  }
+
+  /* Ambient drifting orbs — fixed to viewport so the page never goes
+     dead-black no matter how far you scroll. Dim in light mode, lifts
+     the violet brand subtly in dark mode. */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    pointer-events: none;
+    background-image:
+      radial-gradient(circle at 8% 12%, oklch(0.7 0.22 290 / 0.05) 0%, transparent 38%),
+      radial-gradient(circle at 92% 88%, oklch(0.7 0.18 230 / 0.04) 0%, transparent 42%),
+      radial-gradient(circle at 50% 50%, oklch(0.78 0.18 145 / 0.025) 0%, transparent 55%);
+  }
+  .dark body::before {
+    background-image:
+      radial-gradient(circle at 8% 12%, oklch(0.7 0.22 290 / 0.1) 0%, transparent 38%),
+      radial-gradient(circle at 92% 88%, oklch(0.7 0.18 230 / 0.07) 0%, transparent 42%),
+      radial-gradient(circle at 50% 50%, oklch(0.78 0.18 145 / 0.04) 0%, transparent 55%);
+  }
+
+  /* Faint grid texture — masked to the center so edges fade out cleanly.
+     Adds visual depth without competing with content. */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image:
+      linear-gradient(to right, oklch(0.5 0.02 280 / 0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, oklch(0.5 0.02 280 / 0.04) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(ellipse 80% 70% at center, black 30%, transparent 80%);
+    -webkit-mask-image: radial-gradient(ellipse 80% 70% at center, black 30%, transparent 80%);
+  }
+  .dark body::after {
+    background-image:
+      linear-gradient(to right, oklch(1 0 0 / 0.025) 1px, transparent 1px),
+      linear-gradient(to bottom, oklch(1 0 0 / 0.025) 1px, transparent 1px);
+  }
+}
+
+/* ============================================================
+   UTILITIES — gradient mesh, glow, shimmer for the score reveal
+   ============================================================ */
+@layer utilities {
+  /* Subtle violet/blue gradient mesh used behind the dashboard hero */
+  .bg-mesh {
+    background-image:
+      radial-gradient(circle at 15% 0%, oklch(0.7 0.22 290 / 0.18) 0%, transparent 45%),
+      radial-gradient(circle at 95% 10%, oklch(0.7 0.18 230 / 0.12) 0%, transparent 50%),
+      radial-gradient(circle at 50% 100%, oklch(0.78 0.18 145 / 0.08) 0%, transparent 55%);
+  }
+
+  .bg-mesh-light {
+    background-image:
+      radial-gradient(circle at 15% 0%, oklch(0.55 0.22 290 / 0.08) 0%, transparent 45%),
+      radial-gradient(circle at 95% 10%, oklch(0.62 0.18 230 / 0.06) 0%, transparent 50%),
+      radial-gradient(circle at 50% 100%, oklch(0.7 0.18 145 / 0.05) 0%, transparent 55%);
+  }
+
+  /* Score-tinted glow ring used on the audit result card */
+  .glow-good {
+    box-shadow: 0 0 0 1px oklch(0.7 0.18 145 / 0.4), 0 0 40px -8px oklch(0.7 0.18 145 / 0.45);
+  }
+  .glow-warn {
+    box-shadow: 0 0 0 1px oklch(0.78 0.18 75 / 0.4), 0 0 40px -8px oklch(0.78 0.18 75 / 0.45);
+  }
+  .glow-bad {
+    box-shadow: 0 0 0 1px oklch(0.7 0.22 18 / 0.4), 0 0 40px -8px oklch(0.7 0.22 18 / 0.45);
+  }
+  .glow-primary {
+    box-shadow: 0 0 0 1px oklch(0.7 0.22 290 / 0.4), 0 0 60px -10px oklch(0.7 0.22 290 / 0.5);
+  }
+
+  /* Thin gradient hairline used on cards */
+  .border-gradient {
+    border: 1px solid transparent;
+    background-clip: padding-box, border-box;
+    background-origin: border-box;
+    background-image:
+      linear-gradient(var(--card), var(--card)),
+      linear-gradient(135deg, oklch(0.7 0.22 290 / 0.5), oklch(0.7 0.18 230 / 0.2) 50%, transparent);
   }
 }

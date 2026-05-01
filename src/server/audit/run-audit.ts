@@ -1,5 +1,7 @@
 import 'server-only'
 
+import { and, eq, gte } from 'drizzle-orm'
+
 import { db, schema } from '@/db/client'
 
 import {
@@ -13,6 +15,34 @@ import { fetchHtml } from './fetch-html'
 import { gradeWithGemini, type AuditPayload } from './gemini'
 import { getQuotaState, type QuotaState } from './quota'
 import { validateUrl } from './url-guard'
+
+const RECENT_AUDIT_WINDOW_MS = 24 * 60 * 60 * 1000 // matches cache TTL
+
+/**
+ * Returns true if THIS user has already audited THIS url within the
+ * cache window. When true, we bypass the cache for this run — the user's
+ * intent is "give me fresh data" (they may have changed the page since
+ * their last audit). The cache stays in place for *other* users so the
+ * cost-saving behavior is preserved.
+ */
+async function userHasRecentlyAudited(
+  userId: string,
+  hash: string,
+): Promise<boolean> {
+  const since = new Date(Date.now() - RECENT_AUDIT_WINDOW_MS)
+  const [row] = await db
+    .select({ id: schema.audits.id })
+    .from(schema.audits)
+    .where(
+      and(
+        eq(schema.audits.userId, userId),
+        eq(schema.audits.urlHash, hash),
+        gte(schema.audits.createdAt, since),
+      ),
+    )
+    .limit(1)
+  return !!row
+}
 
 export type RunAuditResult =
   | {
@@ -51,10 +81,13 @@ export async function runAudit(
     }
   }
 
-  // 3. Cache
+  // 3. Cache — bypassed when this same user has audited this URL recently.
+  //    Their intent on a re-run is "give me fresh data" (they may have
+  //    edited the page); cache stays in place for *other* users.
   const canonical = canonicalize(guarded.url)
   const hash = urlHash(canonical)
-  const cached = await readCache(hash)
+  const bypassCache = await userHasRecentlyAudited(userId, hash)
+  const cached = bypassCache ? null : await readCache(hash)
 
   let payload: AuditPayload
   let usedCache = false
@@ -78,6 +111,9 @@ export async function runAudit(
       return { ok: false, error: message, code: 'gemini' }
     }
 
+    // Always overwrite the cache with the fresh result — even when we
+    // bypassed it on read. Other users hitting this URL within the next
+    // 24h benefit from the latest grade.
     await writeCache(hash, canonical, payload)
   }
 

@@ -1,5 +1,7 @@
 import Link from 'next/link'
 
+import { ThemeToggle } from '@/components/theme-toggle'
+import { TrialBadge } from '@/components/trial-badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
@@ -24,27 +26,41 @@ function initials(input: string) {
   return (parts[0]?.[0] ?? 'U') + (parts[1]?.[0] ?? '')
 }
 
-export function TopBar({ user }: { user: TopBarUser }) {
+export function TopBar({ userId, user }: { userId: string; user: TopBarUser }) {
   const display = user.fullName || user.email.split('@')[0]
 
   return (
-    <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border/60 bg-background/80 px-6 backdrop-blur">
+    <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border/60 bg-background/70 px-6 backdrop-blur-xl">
       <div className="flex items-center gap-6">
-        <Link href="/dashboard" className="text-sm font-semibold tracking-tight">
-          Landingcheck
+        <Link href="/dashboard" className="group flex items-center gap-2">
+          <span
+            aria-hidden
+            className="size-5 rounded-md bg-gradient-to-br from-primary via-primary/70 to-primary/40 ring-1 ring-primary/40 transition-transform group-hover:scale-110"
+          />
+          <span className="text-sm font-semibold tracking-tight">Landingcheck</span>
+          <span
+            className="hidden rounded-md border border-primary/40 bg-primary/10 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-primary sm:inline-block"
+            title="Beta — features may change"
+          >
+            Beta
+          </span>
         </Link>
-        <nav className="hidden gap-4 text-sm text-muted-foreground sm:flex">
-          <Link className="hover:text-foreground" href="/dashboard">
+        <nav className="hidden gap-5 text-sm text-muted-foreground sm:flex">
+          <Link className="transition-colors hover:text-foreground" href="/dashboard">
             Dashboard
           </Link>
-          <Link className="hover:text-foreground" href="/audits">
+          <Link className="transition-colors hover:text-foreground" href="/audits">
             Audits
           </Link>
-          <Link className="hover:text-foreground" href="/billing">
+          <Link className="transition-colors hover:text-foreground" href="/billing">
             Billing
           </Link>
         </nav>
       </div>
+
+      <div className="flex items-center gap-2">
+      <TrialBadge userId={userId} />
+      <ThemeToggle />
 
       <DropdownMenu>
         <DropdownMenuTrigger render={<Button variant="ghost" size="sm" className="gap-2 px-2" />}>
@@ -80,6 +96,7 @@ export function TopBar({ user }: { user: TopBarUser }) {
           </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
+      </div>
     </header>
   )
 }

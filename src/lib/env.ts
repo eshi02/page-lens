@@ -21,8 +21,12 @@ const serverSchema = z.object({
   GEMINI_API_KEY: z.string().min(1).optional(),
   GEMINI_MODEL: z.string().default('gemini-2.5-flash'),
 
-  STRIPE_SECRET_KEY: z.string().min(1).optional(),
-  STRIPE_WEBHOOK_SECRET: z.string().min(1).optional(),
+  // Dodo Payments — Merchant of Record. Indian-domiciled, settles to your
+  // Indian bank as export-of-services. Generates FIRA automatically. App
+  // boots without these; billing routes throw until they're set.
+  DODO_PAYMENTS_API_KEY: z.string().min(1).optional(),
+  DODO_WEBHOOK_SECRET: z.string().min(1).optional(),
+  DODO_ENVIRONMENT: z.enum(['test_mode', 'live_mode']).default('test_mode'),
 
   UPSTASH_REDIS_REST_URL: z.string().url().optional(),
   UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),

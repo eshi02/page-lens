@@ -3,40 +3,37 @@ import 'server-only'
 import { eq } from 'drizzle-orm'
 
 import { db, schema } from '@/db/client'
-import { getStripe } from '@/lib/stripe'
+import { getDodo } from '@/lib/dodo'
 
 /**
- * Returns the user's Stripe customer ID, creating one if it doesn't exist.
- * Idempotent: safe to call on every checkout/portal access.
+ * Returns the user's Dodo Payments customer ID, creating one if it doesn't
+ * exist. Idempotent: safe to call on every checkout/portal access.
  */
-export async function ensureStripeCustomer(input: {
+export async function ensureDodoCustomer(input: {
   userId: string
   email: string
   fullName: string | null
 }): Promise<string> {
   const [profile] = await db
-    .select({ stripeCustomerId: schema.profiles.stripeCustomerId })
+    .select({ dodoCustomerId: schema.profiles.dodoCustomerId })
     .from(schema.profiles)
     .where(eq(schema.profiles.id, input.userId))
     .limit(1)
 
-  if (profile?.stripeCustomerId) {
-    return profile.stripeCustomerId
+  if (profile?.dodoCustomerId) {
+    return profile.dodoCustomerId
   }
 
-  const stripe = getStripe()
-  const customer = await stripe.customers.create({
+  const dodo = getDodo()
+  const customer = await dodo.customers.create({
     email: input.email,
-    name: input.fullName ?? undefined,
-    metadata: {
-      user_id: input.userId,
-    },
+    name: input.fullName ?? input.email,
   })
 
   await db
     .update(schema.profiles)
-    .set({ stripeCustomerId: customer.id, updatedAt: new Date() })
+    .set({ dodoCustomerId: customer.customer_id, updatedAt: new Date() })
     .where(eq(schema.profiles.id, input.userId))
 
-  return customer.id
+  return customer.customer_id
 }

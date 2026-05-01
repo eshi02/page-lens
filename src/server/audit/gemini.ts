@@ -94,35 +94,85 @@ export type AuditPayload = {
   issues: AuditIssue[]
 }
 
+export type GeminiErrorCode = 'overloaded' | 'rate-limited' | 'invalid-output' | 'unknown'
+export class GeminiError extends Error {
+  constructor(
+    public code: GeminiErrorCode,
+    message: string,
+  ) {
+    super(message)
+    this.name = 'GeminiError'
+  }
+}
+
+const RETRY_BACKOFF_MS = [800, 2000, 4000]
+
+function classifyGeminiError(err: unknown): GeminiErrorCode {
+  const msg = err instanceof Error ? err.message : String(err)
+  if (/\b503\b|overload|unavailable|high demand|spike/i.test(msg)) return 'overloaded'
+  if (/\b429\b|rate.?limit|quota/i.test(msg)) return 'rate-limited'
+  return 'unknown'
+}
+
 export async function gradeWithGemini(extracted: Extracted): Promise<AuditPayload> {
   const model = getModel()
   const prompt = renderForPrompt(extracted)
 
-  const result = await model.generateContent(prompt)
-  const text = result.response.text()
+  // Retry transient errors (503 overloaded, 429 rate-limited) with
+  // exponential backoff. Most 503s clear within 1-3 seconds.
+  let lastErr: unknown
+  for (let attempt = 0; attempt <= RETRY_BACKOFF_MS.length; attempt++) {
+    try {
+      const result = await model.generateContent(prompt)
+      const text = result.response.text()
 
-  let parsed: unknown
-  try {
-    parsed = JSON.parse(text)
-  } catch {
-    throw new Error('Gemini returned non-JSON output.')
+      let parsed: unknown
+      try {
+        parsed = JSON.parse(text)
+      } catch {
+        throw new GeminiError('invalid-output', 'The AI returned an unexpected output format.')
+      }
+
+      const safe = responseSchema.safeParse(parsed)
+      if (!safe.success) {
+        throw new GeminiError(
+          'invalid-output',
+          `AI response did not match the expected shape: ${safe.error.message}`,
+        )
+      }
+
+      const issues: AuditIssue[] = safe.data.issues.map((i) => ({
+        key: i.key.toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, ''),
+        severity: i.severity,
+        message: i.message,
+      }))
+
+      return {
+        score: safe.data.score,
+        summary: safe.data.summary,
+        issues,
+      }
+    } catch (err) {
+      lastErr = err
+      // Don't retry on permanent failures (bad JSON, schema mismatch).
+      if (err instanceof GeminiError && err.code === 'invalid-output') throw err
+      const code = classifyGeminiError(err)
+      if (code !== 'overloaded' && code !== 'rate-limited') break
+      const backoff = RETRY_BACKOFF_MS[attempt]
+      if (backoff === undefined) break
+      console.warn(
+        `[gemini] ${code} on attempt ${attempt + 1}; retrying in ${backoff}ms`,
+      )
+      await new Promise((r) => setTimeout(r, backoff))
+    }
   }
 
-  const safe = responseSchema.safeParse(parsed)
-  if (!safe.success) {
-    throw new Error(`Gemini response did not match expected shape: ${safe.error.message}`)
-  }
-
-  // Normalize keys to kebab-case slug
-  const issues: AuditIssue[] = safe.data.issues.map((i) => ({
-    key: i.key.toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, ''),
-    severity: i.severity,
-    message: i.message,
-  }))
-
-  return {
-    score: safe.data.score,
-    summary: safe.data.summary,
-    issues,
-  }
+  const code = classifyGeminiError(lastErr)
+  const message =
+    code === 'overloaded'
+      ? 'The AI is currently overloaded. We retried a few times — please try again in a moment.'
+      : code === 'rate-limited'
+        ? 'The AI rate-limited us briefly. Try again in a few seconds.'
+        : 'The AI failed to grade this page. Try again, or pick a different URL.'
+  throw new GeminiError(code, message)
 }

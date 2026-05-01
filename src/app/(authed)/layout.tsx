@@ -22,6 +22,7 @@ export default async function AuthedLayout({
   return (
     <div className="flex min-h-svh flex-col">
       <TopBar
+        userId={user.id}
         user={{
           email: user.email ?? '',
           fullName: user.user_metadata?.full_name ?? null,

@@ -1,12 +1,11 @@
 import 'server-only'
 
-import { env } from '@/lib/env'
-import { getStripe } from '@/lib/stripe'
+import { getDodo } from '@/lib/dodo'
 
-import { ensureStripeCustomer } from './customer'
+import { ensureDodoCustomer } from './customer'
 
 /**
- * Open a Stripe-hosted Customer Portal session so the user can update
+ * Open a Dodo-hosted Customer Portal session so the user can update
  * their card, view invoices, change plan, or cancel.
  */
 export async function createPortalSession(input: {
@@ -14,13 +13,12 @@ export async function createPortalSession(input: {
   email: string
   fullName: string | null
 }): Promise<string> {
-  const customerId = await ensureStripeCustomer(input)
+  const customerId = await ensureDodoCustomer(input)
 
-  const stripe = getStripe()
-  const session = await stripe.billingPortal.sessions.create({
-    customer: customerId,
-    return_url: `${env.APP_URL}/billing`,
+  const dodo = getDodo()
+  const session = await dodo.customers.customerPortal.create(customerId, {
+    send_email: false,
   })
 
-  return session.url
+  return session.link
 }

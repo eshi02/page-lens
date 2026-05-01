@@ -1,5 +1,6 @@
 'use client'
 
+import { AnimatedScore } from '@/components/animated-score'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import type { AuditIssue } from '@/db/schema'
@@ -14,28 +15,33 @@ export function AuditResult({
   result: SuccessResult
   onReset: () => void
 }) {
-  const { audit, cached } = result
+  const { audit } = result
   const grouped = groupIssues(audit.issues)
   const totalIssues = grouped.error.length + grouped.warning.length
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between gap-3">
-        <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-          {cached ? 'Cached audit' : 'Fresh audit'}
+        <div className="font-mono text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
+          Audit result
         </div>
         <Button variant="outline" size="sm" onClick={onReset}>
           Audit another page
         </Button>
       </div>
 
-      <Card>
+      <Card className={`relative overflow-hidden ${scoreGlow(audit.score)}`}>
+        <div
+          aria-hidden
+          className={`pointer-events-none absolute inset-0 -z-10 bg-gradient-to-br ${scoreGradient(audit.score)} opacity-60`}
+        />
         <CardContent className="grid gap-6 p-6 sm:grid-cols-[auto_1fr] sm:items-center">
           <div className="flex items-baseline gap-1">
-            <span className={`text-6xl font-semibold tracking-tight ${scoreColor(audit.score)}`}>
-              {audit.score}
-            </span>
-            <span className="text-2xl text-muted-foreground">/100</span>
+            <AnimatedScore
+              value={audit.score}
+              className={`font-mono text-7xl font-semibold tabular-nums tracking-tight ${scoreColor(audit.score)}`}
+            />
+            <span className="font-mono text-2xl text-muted-foreground">/100</span>
           </div>
           <div className="space-y-1">
             <div className="text-lg font-medium">{scoreLabel(audit.score)}</div>
@@ -121,9 +127,21 @@ function groupIssues(issues: AuditIssue[]) {
 }
 
 function scoreColor(score: number) {
-  if (score >= 75) return 'text-emerald-500'
-  if (score >= 50) return 'text-amber-500'
-  return 'text-rose-500'
+  if (score >= 75) return 'text-emerald-400'
+  if (score >= 50) return 'text-amber-400'
+  return 'text-rose-400'
+}
+
+function scoreGlow(score: number) {
+  if (score >= 75) return 'glow-good'
+  if (score >= 50) return 'glow-warn'
+  return 'glow-bad'
+}
+
+function scoreGradient(score: number) {
+  if (score >= 75) return 'from-emerald-500/10 via-transparent to-transparent'
+  if (score >= 50) return 'from-amber-500/10 via-transparent to-transparent'
+  return 'from-rose-500/10 via-transparent to-transparent'
 }
 
 function scoreLabel(score: number) {

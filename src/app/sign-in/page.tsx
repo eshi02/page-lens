@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 
+import { ThemeToggle } from '@/components/theme-toggle'
+
 import { SignInForm } from './_form'
 
 export const metadata: Metadata = {
@@ -17,40 +19,64 @@ export default async function SignInPage({
   const { next = '/dashboard', error } = await searchParams
 
   return (
-    <main className="relative mx-auto flex min-h-svh w-full max-w-md flex-col items-center justify-center gap-8 px-6 py-16">
-      <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">
-        ← Back home
-      </Link>
+    <main className="relative min-h-svh">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-full bg-mesh"
+      />
 
-      <div className="space-y-2 text-center">
-        <h1 className="text-balance text-3xl font-semibold tracking-tight">Sign in to Landingcheck</h1>
-        <p className="text-pretty text-sm text-muted-foreground">
-          We'll email you a magic link — no password needed.
-        </p>
+      <div className="flex h-16 items-center justify-between px-6">
+        <Link href="/" className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground">
+          <span aria-hidden>←</span> Back home
+        </Link>
+        <ThemeToggle />
       </div>
 
-      {error ? (
-        <div
-          role="alert"
-          className="w-full rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
-        >
-          {decodeURIComponent(error)}
+      <div className="mx-auto flex w-full max-w-md flex-col gap-7 px-6 pb-16 pt-8">
+        <div className="flex justify-center animate-in fade-in zoom-in-95 duration-500">
+          <span
+            aria-hidden
+            className="size-12 rounded-2xl bg-gradient-to-br from-primary via-primary/70 to-primary/40 ring-1 ring-primary/40 glow-primary"
+          />
         </div>
-      ) : null}
 
-      <SignInForm next={next} />
+        <div className="space-y-2 text-center animate-in fade-in slide-in-from-bottom-2 duration-500 delay-75 fill-mode-backwards">
+          <h1 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
+            Sign in to{' '}
+            <span className="bg-gradient-to-br from-primary via-primary/70 to-primary/40 bg-clip-text text-transparent">
+              Landingcheck
+            </span>
+          </h1>
+          <p className="text-pretty text-sm text-muted-foreground">
+            Magic link via email or Google sign-in. No passwords, ever.
+          </p>
+        </div>
 
-      <p className="text-balance text-center text-xs text-muted-foreground">
-        By signing in you agree to our{' '}
-        <Link href="/terms" className="underline underline-offset-4 hover:text-foreground">
-          Terms
-        </Link>{' '}
-        and{' '}
-        <Link href="/privacy" className="underline underline-offset-4 hover:text-foreground">
-          Privacy Policy
-        </Link>
-        .
-      </p>
+        {error ? (
+          <div
+            role="alert"
+            className="w-full rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive backdrop-blur"
+          >
+            {decodeURIComponent(error)}
+          </div>
+        ) : null}
+
+        <div className="rounded-2xl border border-border/60 bg-card/60 p-6 shadow-2xl shadow-primary/5 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-500 delay-150 fill-mode-backwards">
+          <SignInForm next={next} />
+        </div>
+
+        <p className="text-balance text-center text-xs text-muted-foreground">
+          By signing in you agree to our{' '}
+          <Link href="/terms" className="underline underline-offset-4 hover:text-foreground">
+            Terms
+          </Link>{' '}
+          and{' '}
+          <Link href="/privacy" className="underline underline-offset-4 hover:text-foreground">
+            Privacy Policy
+          </Link>
+          .
+        </p>
+      </div>
     </main>
   )
 }

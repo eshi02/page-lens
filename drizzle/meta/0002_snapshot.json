@@ -1,6 +1,6 @@
 {
-  "id": "32c71342-ea7b-4a1c-8a24-e3a49ac68391",
-  "prevId": "2b79cdd3-dff6-4e45-83c0-ca4c89d33966",
+  "id": "43476634-aa90-4b97-899c-3ae94abe7d9d",
+  "prevId": "126ed67e-18b5-46a5-86b5-9d9f15bc8966",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -64,9 +64,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {},
@@ -169,9 +169,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "audits_url_hash_idx": {
           "name": "audits_url_hash_idx",
@@ -184,24 +184,24 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {
         "audits_user_id_profiles_id_fk": {
           "name": "audits_user_id_profiles_id_fk",
           "tableFrom": "audits",
+          "tableTo": "profiles",
           "columnsFrom": [
             "user_id"
           ],
-          "tableTo": "profiles",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -239,8 +239,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "stripe_price_id": {
-          "name": "stripe_price_id",
+        "dodo_product_id": {
+          "name": "dodo_product_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -289,9 +289,15 @@
           "primaryKey": false,
           "notNull": false
         },
-        "stripe_customer_id": {
-          "name": "stripe_customer_id",
+        "dodo_customer_id": {
+          "name": "dodo_customer_id",
           "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "trial_ends_at": {
+          "name": "trial_ends_at",
+          "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
         },
@@ -322,9 +328,9 @@
             }
           ],
           "isUnique": true,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {},
@@ -365,8 +371,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "stripe_subscription_id": {
-          "name": "stripe_subscription_id",
+        "dodo_subscription_id": {
+          "name": "dodo_subscription_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -417,52 +423,52 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
-        "subscriptions_stripe_sub_idx": {
-          "name": "subscriptions_stripe_sub_idx",
+        "subscriptions_dodo_sub_idx": {
+          "name": "subscriptions_dodo_sub_idx",
           "columns": [
             {
-              "expression": "stripe_subscription_id",
+              "expression": "dodo_subscription_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
             }
           ],
           "isUnique": true,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {
         "subscriptions_user_id_profiles_id_fk": {
           "name": "subscriptions_user_id_profiles_id_fk",
           "tableFrom": "subscriptions",
+          "tableTo": "profiles",
           "columnsFrom": [
             "user_id"
           ],
-          "tableTo": "profiles",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "subscriptions_plan_slug_plans_slug_fk": {
           "name": "subscriptions_plan_slug_plans_slug_fk",
           "tableFrom": "subscriptions",
+          "tableTo": "plans",
           "columnsFrom": [
             "plan_slug"
           ],
-          "tableTo": "plans",
           "columnsTo": [
             "slug"
           ],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -504,22 +510,20 @@
       "name": "subscription_status",
       "schema": "public",
       "values": [
+        "pending",
         "active",
-        "trialing",
-        "past_due",
-        "canceled",
-        "incomplete",
-        "incomplete_expired",
-        "unpaid",
-        "paused"
+        "on_hold",
+        "cancelled",
+        "failed",
+        "expired"
       ]
     }
   },
   "schemas": {},
-  "views": {},
   "sequences": {},
   "roles": {},
   "policies": {},
+  "views": {},
   "_meta": {
     "columns": {},
     "schemas": {},

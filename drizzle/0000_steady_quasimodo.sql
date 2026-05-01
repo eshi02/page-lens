@@ -1,7 +1,7 @@
 CREATE TYPE "public"."audit_status" AS ENUM('pending', 'success', 'failed');--> statement-breakpoint
 CREATE TYPE "public"."issue_severity" AS ENUM('good', 'warning', 'error');--> statement-breakpoint
 CREATE TYPE "public"."plan_slug" AS ENUM('free', 'pro', 'agency');--> statement-breakpoint
-CREATE TYPE "public"."subscription_status" AS ENUM('active', 'trialing', 'past_due', 'canceled', 'incomplete', 'incomplete_expired', 'unpaid', 'paused');--> statement-breakpoint
+CREATE TYPE "public"."subscription_status" AS ENUM('pending', 'active', 'on_hold', 'cancelled', 'failed', 'expired');--> statement-breakpoint
 CREATE TABLE "audit_cache" (
 	"url_hash" text PRIMARY KEY NOT NULL,
 	"url" text NOT NULL,
@@ -31,7 +31,7 @@ CREATE TABLE "plans" (
 	"name" text NOT NULL,
 	"monthly_audit_quota" integer NOT NULL,
 	"price_cents" integer NOT NULL,
-	"stripe_price_id" text,
+	"dodo_product_id" text,
 	"features" jsonb DEFAULT '[]'::jsonb NOT NULL
 );
 --> statement-breakpoint
@@ -40,7 +40,7 @@ CREATE TABLE "profiles" (
 	"email" text NOT NULL,
 	"full_name" text,
 	"avatar_url" text,
-	"stripe_customer_id" text,
+	"dodo_customer_id" text,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
@@ -50,7 +50,7 @@ CREATE TABLE "subscriptions" (
 	"user_id" uuid NOT NULL,
 	"plan_slug" "plan_slug" NOT NULL,
 	"status" "subscription_status" NOT NULL,
-	"stripe_subscription_id" text,
+	"dodo_subscription_id" text,
 	"current_period_start" timestamp with time zone,
 	"current_period_end" timestamp with time zone,
 	"cancel_at_period_end" boolean DEFAULT false NOT NULL,
@@ -66,4 +66,4 @@ CREATE INDEX "audits_user_created_idx" ON "audits" USING btree ("user_id","creat
 CREATE INDEX "audits_url_hash_idx" ON "audits" USING btree ("url_hash");--> statement-breakpoint
 CREATE UNIQUE INDEX "profiles_email_idx" ON "profiles" USING btree ("email");--> statement-breakpoint
 CREATE INDEX "subscriptions_user_idx" ON "subscriptions" USING btree ("user_id");--> statement-breakpoint
-CREATE UNIQUE INDEX "subscriptions_stripe_sub_idx" ON "subscriptions" USING btree ("stripe_subscription_id");
+CREATE UNIQUE INDEX "subscriptions_dodo_sub_idx" ON "subscriptions" USING btree ("dodo_subscription_id");
