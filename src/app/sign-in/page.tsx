@@ -32,7 +32,14 @@ export default async function SignInPage({
         <ThemeToggle />
       </div>
 
-      <div className="mx-auto flex w-full max-w-md flex-col gap-7 px-6 pb-16 pt-16">
+      <div className="mx-auto flex w-full max-w-md flex-col gap-7 px-6 pb-16 pt-8">
+        <div className="flex justify-center animate-in fade-in zoom-in-95 duration-500">
+          <span
+            aria-hidden
+            className="size-12 rounded-2xl bg-gradient-to-br from-primary via-primary/70 to-primary/40 ring-1 ring-primary/40 glow-primary"
+          />
+        </div>
+
         <div className="space-y-2 text-center animate-in fade-in slide-in-from-bottom-2 duration-500 delay-75 fill-mode-backwards">
           <h1 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
             Sign in to{' '}

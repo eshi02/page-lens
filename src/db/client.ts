@@ -11,15 +11,18 @@ if (!connectionString) {
   throw new Error('DATABASE_URL is not set')
 }
 
-/**
- * Singleton postgres client. We disable prepared statements because the
- * project is deployed to a serverless runtime where each invocation gets
- * a fresh connection pool — prepared statements would leak resources.
- */
+// pgbouncer transaction mode requires prepare:false. Connect/statement
+// timeouts are critical on serverless: without them a stuck query hangs
+// the entire instance until Cloud Run kills it at 300s. We'd rather
+// surface a real error after 30s than show a blank gateway timeout.
 const queryClient = postgres(connectionString, {
   prepare: false,
-  max: 1,
+  max: 5,
   idle_timeout: 20,
+  connect_timeout: 10,
+  connection: {
+    statement_timeout: 30_000,
+  },
 })
 
 export const db = drizzle(queryClient, { schema })
