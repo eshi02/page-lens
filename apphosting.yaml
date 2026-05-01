@@ -37,8 +37,12 @@ runConfig:
 
 env:
   # ---- Public (browser-readable) ----
+  # NEXT_PUBLIC_APP_URL is the canonical site origin used by metadata,
+  # OG tags, and Dodo return URLs. After the first deploy, update this
+  # value to your Firebase-assigned URL (e.g. https://landingcheck--<project>.<region>.web.app)
+  # or your custom domain once attached.
   - variable: NEXT_PUBLIC_APP_URL
-    value: https://landingcheck.app
+    secret: APP_URL
     availability:
       - BUILD
       - RUNTIME
@@ -64,7 +68,7 @@ env:
     availability:
       - RUNTIME
   - variable: APP_URL
-    value: https://landingcheck.app
+    secret: APP_URL
     availability:
       - RUNTIME
 
@@ -102,17 +106,20 @@ env:
     availability:
       - RUNTIME
 
-  # Dodo Payments (set after creating live products in Dodo dashboard)
-  - variable: DODO_PAYMENTS_API_KEY
-    secret: DODO_PAYMENTS_API_KEY
-    availability:
-      - RUNTIME
-  - variable: DODO_WEBHOOK_SECRET
-    secret: DODO_WEBHOOK_SECRET
-    availability:
-      - RUNTIME
+  # Dodo Payments — uncomment and create the secrets in Secret Manager
+  # AFTER your first live products + webhook are set up in the Dodo
+  # dashboard. Until then these are intentionally absent so the
+  # billing page falls into its `setup-pending` state.
+  # - variable: DODO_PAYMENTS_API_KEY
+  #   secret: DODO_PAYMENTS_API_KEY
+  #   availability:
+  #     - RUNTIME
+  # - variable: DODO_WEBHOOK_SECRET
+  #   secret: DODO_WEBHOOK_SECRET
+  #   availability:
+  #     - RUNTIME
   - variable: DODO_ENVIRONMENT
-    value: live_mode
+    value: test_mode
     availability:
       - RUNTIME
 

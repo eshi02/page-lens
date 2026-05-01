@@ -173,11 +173,24 @@ function PlanColumn({
   const priceLabel =
     plan.priceCents === 0 ? '$0' : `$${Math.round(plan.priceCents / 100)}`
   const cadenceLabel = plan.priceCents === 0 ? '' : 'per month'
+  const isRecommended = !!tagline.recommended
 
   return (
-    <div className="relative flex min-h-[560px] flex-col px-6 py-8 lg:px-8 lg:py-10">
+    <div
+      className={`relative flex min-h-[560px] flex-col px-6 py-8 lg:px-8 lg:py-10 ${
+        isRecommended
+          ? 'overflow-hidden bg-gradient-to-b from-primary/10 via-primary/5 to-transparent shadow-[inset_0_0_60px_-20px] shadow-primary/20'
+          : ''
+      }`}
+    >
+      {isRecommended ? (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -top-24 left-1/2 -z-10 size-72 -translate-x-1/2 rounded-full bg-primary/15 blur-3xl"
+        />
+      ) : null}
       {tagline.recommended ? (
-        <span className="absolute right-6 top-8 inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-primary lg:right-8 lg:top-10">
+        <span className="absolute right-6 top-8 inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/15 px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-primary shadow-lg shadow-primary/20 lg:right-8 lg:top-10">
           <span aria-hidden className="size-1 rounded-full bg-primary" />
           Recommended
         </span>
