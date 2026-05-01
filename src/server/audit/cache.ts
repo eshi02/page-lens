@@ -6,6 +6,7 @@ import { and, eq, gt, lt } from 'drizzle-orm'
 
 import { db, schema } from '@/db/client'
 
+import type { Extracted } from './extract'
 import type { AuditPayload } from './gemini'
 
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000 // 24h
@@ -30,6 +31,32 @@ export function canonicalize(url: URL): string {
 
 export function urlHash(canonicalUrl: string): string {
   return createHash('sha256').update(canonicalUrl).digest('hex')
+}
+
+/**
+ * Hash the *extracted page content* — what the AI actually grades. The
+ * cache is keyed on this rather than the URL so that when a page changes
+ * (copy edits, A/B test rollout, redesign) different users running an
+ * audit get a fresh grade reflecting the current state, instead of a
+ * stale audit baked from an earlier snapshot.
+ *
+ * We hash the extracted struct rather than raw HTML so that
+ * semantically-irrelevant churn (whitespace, comments, CSRF tokens,
+ * tracking pixels, dynamic class hashes) doesn't bust the cache.
+ */
+export function contentHash(extracted: Extracted): string {
+  const canonical = JSON.stringify({
+    title: extracted.title,
+    metaDescription: extracted.metaDescription,
+    ogTitle: extracted.ogTitle,
+    ogDescription: extracted.ogDescription,
+    viewport: extracted.viewport,
+    headings: extracted.headings,
+    ctas: extracted.ctas,
+    navLinks: extracted.navLinks,
+    bodyText: extracted.bodyText,
+  })
+  return createHash('sha256').update(canonical).digest('hex')
 }
 
 export async function readCache(hash: string): Promise<{

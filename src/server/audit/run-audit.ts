@@ -6,6 +6,7 @@ import { db, schema } from '@/db/client'
 
 import {
   canonicalize,
+  contentHash,
   readCache,
   urlHash,
   writeCache,
@@ -82,13 +83,28 @@ export async function runAudit(
     }
   }
 
-  // 3. Cache — bypassed when this same user has audited this URL recently.
-  //    Their intent on a re-run is "give me fresh data" (they may have
-  //    edited the page); cache stays in place for *other* users.
+  // 3. Fetch + extract — runs every audit. Network is cheap; the
+  //    expensive call is Gemini, which we still skip on cache hit.
+  //    Doing this *before* the cache check is what makes the cache
+  //    accurate: we key on the actual page content, so a page that
+  //    has changed since its last audit naturally cache-misses and
+  //    gets re-graded, even for a different user.
   const canonical = canonicalize(guarded.url)
-  const hash = urlHash(canonical)
-  const bypassCache = await userHasRecentlyAudited(userId, hash)
-  const cached = bypassCache ? null : await readCache(hash)
+  const urlH = urlHash(canonical)
+
+  const fetched = await fetchHtml(guarded.url)
+  if (!fetched.ok) {
+    return { ok: false, error: fetched.reason, code: 'fetch' }
+  }
+  const extracted = extractFromHtml(fetched.html, fetched.finalUrl)
+  const cacheKey = contentHash(extracted)
+
+  // 4. Cache lookup — bypassed when this user re-runs the same URL
+  //    (intent: "give me fresh data even if my page looks the same"),
+  //    served otherwise. Keyed on content, not URL, so unrelated users
+  //    auditing a page that changed since first audit get fresh grades.
+  const bypassCache = await userHasRecentlyAudited(userId, urlH)
+  const cached = bypassCache ? null : await readCache(cacheKey)
 
   let payload: AuditPayload
   let usedCache = false
@@ -97,14 +113,7 @@ export async function runAudit(
     payload = cached.payload
     usedCache = true
   } else {
-    // 4. Fetch + grade
-    const fetched = await fetchHtml(guarded.url)
-    if (!fetched.ok) {
-      return { ok: false, error: fetched.reason, code: 'fetch' }
-    }
-
-    const extracted = extractFromHtml(fetched.html, fetched.finalUrl)
-
+    // 5. Grade with Gemini
     try {
       payload = await gradeWithGemini(extracted)
     } catch (err) {
@@ -112,21 +121,21 @@ export async function runAudit(
       return { ok: false, error: message, code: 'gemini' }
     }
 
-    // Always overwrite the cache with the fresh result — even when we
-    // bypassed it on read. Other users hitting this URL within the next
-    // 24h benefit from the latest grade.
-    await writeCache(hash, canonical, payload)
+    // Cache the fresh result keyed on content hash. Other users hitting
+    // this same content within the TTL benefit from the same grade —
+    // even if they accessed it via a different URL (e.g. ?utm=...).
+    await writeCache(cacheKey, canonical, payload)
   }
 
-  // 5. Persist user-facing audit row. cachedFrom is intentionally null;
-  // cache provenance can be re-derived by joining audits.urlHash against
-  // audit_cache, which is more accurate than recording it here.
+  // 6. Persist user-facing audit row. The audits table tracks per-user
+  // history keyed by URL (not content), so the same user re-auditing
+  // the same URL still groups in their history even when the page changes.
   const [row] = await db
     .insert(schema.audits)
     .values({
       userId,
       url: canonical,
-      urlHash: hash,
+      urlHash: urlH,
       status: 'success',
       score: payload.score,
       summary: payload.summary,
