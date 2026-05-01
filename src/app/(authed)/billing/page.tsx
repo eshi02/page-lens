@@ -177,18 +177,18 @@ function PlanColumn({
 
   return (
     <div
-      className={`relative flex min-h-[560px] flex-col px-6 py-8 lg:px-8 lg:py-10 ${
+      className={`group relative flex min-h-[560px] flex-col px-6 py-8 transition-all duration-300 hover:bg-gradient-to-b hover:from-primary/[0.07] hover:via-primary/[0.03] hover:to-transparent hover:shadow-[inset_0_0_60px_-20px] hover:shadow-primary/15 lg:px-8 lg:py-10 ${
         isRecommended
           ? 'overflow-hidden bg-gradient-to-b from-primary/10 via-primary/5 to-transparent shadow-[inset_0_0_60px_-20px] shadow-primary/20'
           : ''
       }`}
     >
-      {isRecommended ? (
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -top-24 left-1/2 -z-10 size-72 -translate-x-1/2 rounded-full bg-primary/15 blur-3xl"
-        />
-      ) : null}
+      <div
+        aria-hidden
+        className={`pointer-events-none absolute -top-24 left-1/2 -z-10 size-72 -translate-x-1/2 rounded-full bg-primary/15 blur-3xl transition-opacity duration-300 ${
+          isRecommended ? 'opacity-100' : 'opacity-0 group-hover:opacity-60'
+        }`}
+      />
       {tagline.recommended ? (
         <span className="absolute right-6 top-8 inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/15 px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-primary shadow-lg shadow-primary/20 lg:right-8 lg:top-10">
           <span aria-hidden className="size-1 rounded-full bg-primary" />
