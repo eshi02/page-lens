@@ -2,6 +2,8 @@
 
 AI-graded landing page audits in 30 seconds. Paste a URL → get a score and a list of specific, actionable conversion-rate fixes.
 
+**🚀 Live demo:** [landingcheck--landingcheck.asia-east1.hosted.app](https://landingcheck--landingcheck.asia-east1.hosted.app)
+
 ## Stack
 
 - **Next.js 16** (App Router, Server Components, Server Actions, Turbopack)
